@@ -218,6 +218,6 @@ Resources:
                   }
                 RoleArn: 
                   Fn::GetAtt: [ CloudformationExecutionRole, Arn ]
-                StackName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'FargateECSCluster']]
+                StackName: !Join ['-', [!Ref Stage, 'FargateECSCluster']]
                 TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
             RunOrder: 1
