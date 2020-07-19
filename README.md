@@ -68,4 +68,4 @@ Run `aws configure --profile infra-tasks-condenast` and provide the below:
 - AWS Access Key ID
 - AWS Secret Access Key
 - Default region name
--  and output formats
+- Default output format
