@@ -36,6 +36,7 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ecr-repository']]
+    DeletionPolicy: Retain
 
   # Create an S3 Bucket to store build artifacts
   S3Bucket:
@@ -87,36 +88,26 @@ Resources:
       Runtime: python3.7
       Role: !GetAtt 'LambdaExecutionRole.Arn'
       Handler: index.handler   
-      Description: Invoke a function during stack deletion to cleanup S3 bucket.
-      TracingConfig:
-        Mode: Active       
+      Timeout: 25
+      Description: Invoke a function during stack deletion to cleanup S3 bucket.    
       Code:
         ZipFile: |
           import json
           import boto3
+          import cfnresponse
           from botocore.vendored import requests
-          def our_lambda(event, context): 
+          def handler(event, context): 
             try: 
               bucket = event['ResourceProperties']['BucketName'] 
               if event['RequestType'] == 'Delete':            
                 s3 = boto3.resource('s3')            
                 bucket = s3.Bucket(bucket)            
                 for obj in bucket.objects.filter():                
-                  s3.Object(bucket.name, obj.key).delete()        
-                  sendResponseCfn(event, context, "SUCCESS")    
-                except Exception as e:        
-                  print(e)        
-                  sendResponseCfn(event, context, "FAILED")
-                  
-          def sendResponseCfn(event, context, responseStatus):    
-            response_body = {'Status': responseStatus,
-                            'Reason': 'Log stream name: ' + context.log_stream_name,                     
-                            'PhysicalResourceId': context.log_stream_name,                     
-                            'StackId': event['StackId'],                     
-                            'RequestId': event['RequestId'],                     
-                            'LogicalResourceId': event['LogicalResourceId'],                     
-                            'Data': json.loads("{}")}    
-            requests.put(event['ResponseURL'], data=json.dumps(response_body))
+                  s3.Object(bucket.name, obj.key).delete()                          
+            except Exception as e:        
+              print(e)        
+              cfnresponse.send(event, context, cfnresponse.FAILED, None, 'CleanupBucketFunction') 
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, None, 'CleanupBucketFunction')                
     DependsOn: S3Bucket
 
   # Create Access Role for CodePipeLine
@@ -248,12 +239,12 @@ Resources:
                 # Pass parameter values to Fargate-Cluster.yml for deployment
                 ParameterOverrides: !Sub |
                   {
-                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imageDetail.json", "ImageURI"] },
+                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "aws-hello-world/imageDetail.json", "ImageURI"] },
                     "Stage":  "${Stage}",
                     "ContainerPort": "${ContainerPort}"
                   }
                 RoleArn: 
                   Fn::GetAtt: [ CloudformationExecutionRole, Arn ]
-                StackName: !Join ['-', [!Ref Stage, 'FargateECSCluster']]
-                TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
+                StackName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'FargateECSCluster']]
+                TemplatePath: source-output-artifacts::cloudformation/Fargate-Cluster.yml
             RunOrder: 1

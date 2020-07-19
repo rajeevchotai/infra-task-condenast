@@ -2,8 +2,8 @@
 export AWS_PAGER=""
 
 
-aws cloudformation delete-stack --stack-name hello-world-code-pipeline
-aws cloudformation wait stack-delete-complete --stack-name hello-world-code-pipeline
+aws cloudformation delete-stack --stack-name hello-world-code-pipeline --profile infra-task-condenast
+aws cloudformation wait stack-delete-complete --stack-name hello-world-code-pipeline --profile infra-task-condenast
 
-aws cloudformation delete-stack --stack-name dev-FargateECSCluster
-aws cloudformation wait stack-delete-complete --stack-name dev-FargateECSCluster
+aws cloudformation delete-stack --stack-name dev-FargateECSCluster --profile infra-task-condenast
+aws cloudformation wait stack-delete-complete --stack-name dev-FargateECSCluster --profile infra-task-condenast
