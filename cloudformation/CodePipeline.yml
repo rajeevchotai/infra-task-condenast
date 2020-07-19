@@ -36,7 +36,6 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ecr-repository']]
-    DeletionPolicy: Retain
 
   # Create an S3 Bucket to store build artifacts
   S3Bucket:
@@ -47,9 +46,19 @@ Resources:
   # Custom Resource to cleanup S3 Bucket on deletion
   CleanupBucketOnDelete:
     Type: Custom::CleanupBucket
+    DependsOn: S3Bucket
     Properties:
       ServiceToken: !GetAtt 'CleanupBucketFunction.Arn'
       BucketName: !Ref S3Bucket
+
+  DeleteRepository:
+    Type: Custom::DeleteRepository
+    DependsOn: ECRRepository
+    Properties:
+      ServiceToken: !GetAtt DeleteRepositoryFunction.Arn
+      RegistryId: !Ref AWS::AccountId
+      RepositoryName: !Ref ECRRepository
+
 
   # Role for lambda function to allow cleanup of S3 bucket on delete
   LambdaExecutionRole:
@@ -77,9 +86,17 @@ Resources:
             - arn:aws:logs:*:*:*
           - Effect: Allow
             Action:
-            - s3:*
+            - s3:ListBucket
+            Resource: !GetAtt S3Bucket.Arn
+          - Effect: Allow
+            Action:
+            - s3:DeleteObject
+            Resource: !Sub "${S3Bucket.Arn}/*"   
+          - Effect: Allow
+            Action:
+            - ecr:DeleteRepository
             Resource: 
-            - !GetAtt 'S3Bucket.Arn'            
+            - !GetAtt 'ECRRepository.Arn'                        
 
   # Lambda Function to empty S3 bucket on delete
   CleanupBucketFunction:
@@ -103,13 +120,42 @@ Resources:
                 s3 = boto3.resource('s3')            
                 bucket = s3.Bucket(bucket)            
                 for obj in bucket.objects.filter():                
-                  s3.Object(bucket.name, obj.key).delete()                          
+                  s3.Object(bucket.name, obj.key).delete()                         
             except Exception as e:        
               print(e)        
               cfnresponse.send(event, context, cfnresponse.FAILED, None, 'CleanupBucketFunction') 
             cfnresponse.send(event, context, cfnresponse.SUCCESS, None, 'CleanupBucketFunction')                
     DependsOn: S3Bucket
 
+
+  DeleteRepositoryFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      Role: !GetAtt 'LambdaExecutionRole.Arn'
+      Handler: index.handler   
+      Timeout: 25
+      Description: Invoke a function during stack deletion to cleanup S3 bucket.    
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import cfnresponse
+          from botocore.vendored import requests
+          def handler(event, context): 
+            try: 
+              bucket = event['ResourceProperties']['BucketName'] 
+              if event['RequestType'] == 'Delete':            
+                response = ecr.delete_repository(
+                registryId=event['ResourceProperties']['RegistryId'],
+                repositoryName=event['ResourceProperties']['RepositoryName'],
+                force=True)                       
+            except Exception as e:        
+              print(e)        
+              cfnresponse.send(event, context, cfnresponse.FAILED, None, 'CleanupBucketFunction') 
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, None, 'CleanupBucketFunction')                
+    DependsOn: ECRRepository
+      
   # Create Access Role for CodePipeLine
   CodePipeLineExecutionRole:
     Type: AWS::IAM::Role
