@@ -50,10 +50,46 @@ Resources:
       ServiceToken: !GetAtt 'CleanupBucketFunction.Arn'
       BucketName: !Ref S3Bucket
 
+  # Role for lambda function to allow cleanup of S3 bucket on delete
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: 
+            - arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: 
+            - !GetAtt 'S3Bucket.Arn'            
+
   # Lambda Function to empty S3 bucket on delete
   CleanupBucketFunction:
     Type: AWS::Lambda::Function
     Properties:
+      Runtime: python3.7
+      Role: !GetAtt 'LambdaExecutionRole.Arn'
+      Handler: index.handler   
+      Description: Invoke a function during stack deletion to cleanup S3 bucket.
+      TracingConfig:
+        Mode: Active       
       Code:
         ZipFile: |
           import json
