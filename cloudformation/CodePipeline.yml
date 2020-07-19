@@ -135,7 +135,7 @@ Resources:
       Role: !GetAtt 'LambdaExecutionRole.Arn'
       Handler: index.handler   
       Timeout: 25
-      Description: Invoke a function during stack deletion to cleanup S3 bucket.    
+      Description: Invoke a function during stack deletion to cleanup ECR Repository.    
       Code:
         ZipFile: |
           import json
@@ -144,7 +144,7 @@ Resources:
           from botocore.vendored import requests
           def handler(event, context): 
             try: 
-              bucket = event['ResourceProperties']['BucketName'] 
+              ecr = boto3.client('ecr')
               if event['RequestType'] == 'Delete':            
                 response = ecr.delete_repository(
                 registryId=event['ResourceProperties']['RegistryId'],
@@ -152,8 +152,8 @@ Resources:
                 force=True)                       
             except Exception as e:        
               print(e)        
-              cfnresponse.send(event, context, cfnresponse.FAILED, None, 'CleanupBucketFunction') 
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, None, 'CleanupBucketFunction')                
+              cfnresponse.send(event, context, cfnresponse.FAILED, None, 'DeleteRepositoryFunction') 
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, None, 'DeleteRepositoryFunction')                
     DependsOn: ECRRepository
       
   # Create Access Role for CodePipeLine
