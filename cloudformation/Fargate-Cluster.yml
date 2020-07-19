@@ -199,8 +199,8 @@ Resources:
     ServiceAutoScalingTarget:
       Type: AWS::ApplicationAutoScaling::ScalableTarget
       Properties:
-        MaxCapacity: !Ref MaxCapacity
-        MinCapacity: !Ref MinCapacity
+        MaxCapacity: 5
+        MinCapacity: 1
         ResourceId:
           Fn::Join:
           - "/"
