@@ -64,7 +64,7 @@ First, you'll need to create an [AWS account](https://portal.aws.amazon.com/bill
 
 
 ### Credentials
-Run `aws configure --profile infra-tasks-condenast` and provide the below:
+Run `aws configure --profile infra-task-condenast` and provide the below:
 - AWS Access Key ID
 - AWS Secret Access Key
 - Default region name
