@@ -195,40 +195,40 @@ Resources:
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref TargetGroup
 
-    # Auto Scaling target for ECS Service
-    ServiceAutoScalingTarget:
-      Type: AWS::ApplicationAutoScaling::ScalableTarget
-      Properties:
-        MaxCapacity: 5
-        MinCapacity: 1
-        ResourceId:
-          Fn::Join:
-          - "/"
-          - - service
-            - !Ref Cluster
-            - !GetAtt [ECSService, Name]
-        RoleARN: !GetAtt ServiceAutoScaleRole.Arn
-        ScalableDimension: ecs:service:DesiredCount
-        ServiceNamespace: ecs
+  # Auto Scaling target for ECS Service
+  ServiceAutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 5
+      MinCapacity: 1
+      ResourceId:
+        Fn::Join:
+        - "/"
+        - - service
+          - !Ref Cluster
+          - !GetAtt [ECSService, Name]
+      RoleARN: !GetAtt ServiceAutoScaleRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
 
     # Auto Scaling Role for ECS Service
-    ServiceAutoScaleRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: [application-autoscaling.amazonaws.com]
-              Action: ['sts:AssumeRole']
-          Path: /
-          Policies:
-            - PolicyName: ecs-service
-              PolicyDocument:
-                Statement:
-                  - Effect: Allow
-                    Action: ['ecs:DescribeServices', 'ecs:UpdateService', 'cloudwatch:DescribeAlarms']
-                    Resource: '*'
+  ServiceAutoScaleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [application-autoscaling.amazonaws.com]
+            Action: ['sts:AssumeRole']
+        Path: /
+        Policies:
+          - PolicyName: ecs-service
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action: ['ecs:DescribeServices', 'ecs:UpdateService', 'cloudwatch:DescribeAlarms']
+                  Resource: '*'
 
 
   # Auto scaling policy to scale based on CPU utilization of targets being above 75% and below 60%
