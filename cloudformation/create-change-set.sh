@@ -6,7 +6,9 @@ aws cloudformation create-change-set \
   --stack-name hello-world-code-pipeline \
   --template-body file://CodePipeline.yml  \
   --parameters \
-      ParameterKey=GithubOAuthToken,ParameterValue=<oauth token> \
+      ParameterKey=GithubOAuthToken,ParameterValue=<GithubOAuthToken> \
+      ParameterKey=GithubUserName,ParameterValue=<GithubUserName> \
+      ParameterKey=GithubRepo,ParameterValue=<GithubRepo> \
   --capabilities CAPABILITY_IAM --profile infra-task-condenast
 
 aws cloudformation describe-change-set \

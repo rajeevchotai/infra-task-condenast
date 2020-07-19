@@ -69,3 +69,9 @@ Run `aws configure --profile infra-tasks-condenast` and provide the below:
 - AWS Secret Access Key
 - Default region name
 - Default output format
+
+## Tearing down Infrastructure
+To remove all the infra created above and get back to where you were, perform the following steps:
+
+1. `cd` into the [cloudformation/](cloudformation/) directory:
+2. Update `delete.sh` with your AWS Account ID run `./delete.sh`.
