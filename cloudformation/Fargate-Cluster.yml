@@ -247,3 +247,14 @@ Resources:
         ScaleOutCooldown: 60
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization          
+
+Outputs:
+  ECSService:
+    Value: !Ref ECSService
+  ECSCluster:
+    Value: !Ref Cluster
+  ECSALB:
+    Description: Your ALB DNS URL
+    Value: !Join ['', [!GetAtt [LoadBalancer, DNSName]]]
+  TaskDef:
+    Value: !Ref TaskDefinition          
