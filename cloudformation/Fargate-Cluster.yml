@@ -221,14 +221,14 @@ Resources:
             Principal:
               Service: [application-autoscaling.amazonaws.com]
             Action: ['sts:AssumeRole']
-        Path: /
-        Policies:
-          - PolicyName: ecs-service
-            PolicyDocument:
-              Statement:
-                - Effect: Allow
-                  Action: ['ecs:DescribeServices', 'ecs:UpdateService', 'cloudwatch:DescribeAlarms']
-                  Resource: '*'
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: ['ecs:DescribeServices', 'ecs:UpdateService', 'cloudwatch:DescribeAlarms']
+                Resource: '*'
 
 
   # Auto scaling policy to scale based on CPU utilization of targets being above 75% and below 60%
